@@ -109,6 +109,7 @@ func main() {
 	}
 
 	psv := slides.NewPresentationsService(srv)
+
 	pres := &slides.Presentation{Title: "GOLANG TEST PRES #2"}
 	res, err := psv.Create(pres).Do()
 	if err != nil {
