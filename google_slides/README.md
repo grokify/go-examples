@@ -2,6 +2,7 @@
 
 A simple Go example that covers:
 
+* Slides API: https://developers.google.com/slides/
 * Quickstart: https://developers.google.com/slides/quickstart/go
 * Creating and Managing Presentations https://developers.google.com/slides/how-tos/presentations
 * Basic writing: adding a text box to slide: https://developers.google.com/slides/samples/writing
