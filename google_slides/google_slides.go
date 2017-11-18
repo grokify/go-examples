@@ -10,95 +10,41 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
-	"os"
-	"os/user"
-	"path"
-	"path/filepath"
 
-	"github.com/grokify/gotilla/fmt/fmtutil"
+	//"github.com/grokify/gotilla/fmt/fmtutil"
 	ou "github.com/grokify/oauth2util"
 	oug "github.com/grokify/oauth2util/google"
 	"github.com/joho/godotenv"
 	"golang.org/x/net/context"
-	"golang.org/x/oauth2"
 	"google.golang.org/api/slides/v1"
 )
 
-// tokenCacheFile generates credential file path/filename.
-// It returns the generated credential path/filename.
-func tokenCacheFile() (string, error) {
-	usr, err := user.Current()
-	if err != nil {
-		return "", err
-	}
-	tokenCacheDir := filepath.Join(usr.HomeDir, ".credentials")
-	os.MkdirAll(tokenCacheDir, 0700)
-	return filepath.Join(tokenCacheDir,
-		url.QueryEscape("slides.googleapis.com-go-quickstart.json")), err
-}
-
-func getConf() (*oauth2.Config, error) {
-	return oug.ConfigFromEnv(oug.ClientSecretEnv,
+func NewClient(forceNewToken bool) (*http.Client, error) {
+	conf, err := oug.ConfigFromEnv(oug.ClientSecretEnv,
 		[]string{slides.DriveScope, slides.PresentationsScope})
-}
-
-func getSetClientWeb(tStore ou.TokenStoreFile) (*http.Client, error) {
-	conf, err := getConf()
 	if err != nil {
-		return &http.Client{}, err
+		return nil, err
 	}
-	tok, err := ou.NewTokenFromWeb(conf)
+
+	tokenFile := "slides.googleapis.com-go-quickstart.json"
+	tokenStore, err := ou.NewTokenStoreFileDefault(tokenFile, true, 0700)
 	if err != nil {
-		return &http.Client{}, err
-	}
-	tStore.Token = tok
-	fmtutil.PrintJSON(tok)
-
-	err = tStore.Write()
-	if err != nil {
-		return &http.Client{}, err
+		return nil, err
 	}
 
-	return conf.Client(context.Background(), tok), nil
-}
-
-func getTokenStore() ou.TokenStoreFile {
-	credDir, err := ou.UserCredentialsDir()
-	if err != nil {
-		panic(err)
-	}
-	tokenPath := path.Join(credDir, "slides.googleapis.com-go-quickstart.json")
-	return ou.NewTokenStoreFile(tokenPath)
-}
-
-func getClient(forceNewToken bool) (*http.Client, error) {
-	err := godotenv.Load()
-	if err != nil {
-		return &http.Client{}, err
-	}
-
-	tStore := getTokenStore()
-	err = tStore.Read()
-
-	client := &http.Client{}
-
-	if err != nil || forceNewToken {
-		return getSetClientWeb(tStore)
-	}
-
-	conf, err := getConf()
-	if err != nil {
-		panic(err)
-	}
-	client = conf.Client(context.Background(), tStore.Token)
-	return client, nil
+	return ou.NewClientWebTokenStore(context.Background(), conf, tokenStore, forceNewToken)
 }
 
 func main() {
-	forceNewToken := true
+	err := godotenv.Load()
+	if err != nil {
+		panic(err)
+	}
 
-	client, err := getClient(forceNewToken)
+	forceNewToken := false
+
+	client, err := NewClient(forceNewToken)
+
 	if err != nil {
 		log.Fatal("Unable to get Client")
 	}
