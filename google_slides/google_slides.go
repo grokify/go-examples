@@ -11,7 +11,6 @@ import (
 	"log"
 	"net/http"
 
-	//"github.com/grokify/gotilla/fmt/fmtutil"
 	ou "github.com/grokify/oauth2util"
 	oug "github.com/grokify/oauth2util/google"
 	"github.com/joho/godotenv"
@@ -44,7 +43,6 @@ func main() {
 	forceNewToken := false
 
 	client, err := NewClient(forceNewToken)
-
 	if err != nil {
 		log.Fatal("Unable to get Client")
 	}
